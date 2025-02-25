@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Check‑Out Report</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* General styling */
+    body { margin: 0; font-family: Arial, sans-serif; background: #f0f2f5; }
+    header { background: #6f35dc; color: white; padding: 20px; text-align: center; }
+    header h1 { margin: 0; font-size: 2em; }
+    header p { margin: 5px 0 0; font-size: 1.2em; }
+    .header-content {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      background: #fff; padding: 15px 20px; border-bottom: 1px solid #ccc;
+    }
+    .left-panel { width: 48%; text-align: left; }
+    .right-panel { width: 48%; text-align: right; }
+    /* Flex container for both charts */
+    .charts-container {
+      display: flex; gap: 20px; justify-content: flex-end;
+    }
+    /* Progress Chart Container */
+    .progress-chart-container {
+      position: relative; width: 550px; height: 300px; margin-left: -100px;
+      transition: all 0.3s ease;
+    }
+    /* Expanded state for progress chart */
+    .progress-chart-container.expanded {
+      width: 800px; height: 600px; margin-left: 0;
+    }
+    /* Volume Chart Container */
+    .chart-container {
+      position: relative; width: 500px; height: 350px; margin-left: -10px;
+    }
+    /* Buttons */
+    .toggle-btn, .expand-btn {
+      margin-top: 10px; padding: 10px 20px; background: #28a745; color: white;
+      border: none; border-radius: 5px; cursor: pointer;
+    }
+    .details-table {
+      width: 90%; border-collapse: collapse; margin-top: 10px; display: none;
+    }
+    .details-table th, .details-table td { border: 1px solid #ddd; padding: 8px; }
+    .details-table th { background-color: #f2f2f2; text-align: left; }
+    /* Accordion styling */
+    .accordion { margin: 20px; }
+    .accordion-item { border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; background: #fff; }
+    .accordion-header { background: #eee; padding: 10px; cursor: pointer; }
+    .accordion-content { padding: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Check‑Out Report</h1>
+    <p id="date"></p>
+  </header>
+  <div class="header-content">
+    <!-- Left: Missed Check‑Out Summary -->
+    <div class="left-panel">
+      <h2>Missed Check‑Outs</h2>
+      <p>Total Missed: <span id="missedCount">2</span></p>
+      <button class="toggle-btn" onclick="toggleTable('missedTable')">Show Details</button>
+      <table class="details-table" id="missedTable">
+        <thead>
+          <tr><th>Username</th></tr>
+        </thead>
+        <tbody id="missedTableBody">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </div>
+    <!-- Right: Container for both charts -->
+    <div class="right-panel">
+      <div class="charts-container">
+        <!-- Progress Chart (with Expand button) -->
+        <div class="progress-chart-container" id="progressChartContainer">
+          <canvas id="progressChart"></canvas>
+          <button class="expand-btn" onclick="toggleExpandProgressChart()">Expand Progress Chart</button>
+        </div>
+        <!-- Volume Chart -->
+        <div class="chart-container">
+          <canvas id="volumeChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Detailed Check‑Out Reports Accordion -->
+  <div style="margin: 20px;">
+    <button class="toggle-btn" onclick="toggleAccordionSection()">Show Detailed Check‑Out Reports</button>
+    <div id="detailedReports" style="display:none;">
+      <div class="accordion"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Set current date in header (DD/MM/YYYY)
+    const today = new Date();
+    const formattedDate = String(today.getDate()).padStart(2, '0') + '/' +
+                          String(today.getMonth() + 1).padStart(2, '0') + '/' +
+                          today.getFullYear();
+    document.getElementById("date").innerText = formattedDate;
+    
+    // Initialize Volume Chart with placeholder data
+    const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+    const volumeChart = new Chart(volumeCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        datasets: [{
+          label: 'Check‑In Volume',
+          data: [10, 15, 12, 18, 20],
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Check‑Out Volume',
+          data: [8, 12, 14, 11, 9],
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'x', responsive: true, maintainAspectRatio: false,
+        scales: { x: { beginAtZero: true, max: 100 } }
+      }
+    });
+    
+    // Initialize Progress Chart with placeholder data
+    const progressCtx = document.getElementById('progressChart').getContext('2d');
+    const progressChart = new Chart(progressCtx, {
+      type: 'bar',
+      data: {
+        labels: ['user1', 'user2', 'user3'],
+        datasets: [{
+          label: 'Progress %',
+          data: [75, 85, 60],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.6)',
+            'rgba(153, 102, 255, 0.6)',
+            'rgba(255, 159, 64, 0.6)'
+          ],
+          borderColor: [
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        scales: { x: { beginAtZero: true, max: 100 } }
+      }
+    });
+    
+    // Toggle function for missed users table
+    function toggleTable(id) {
+      const table = document.getElementById(id);
+      table.style.display = (table.style.display === 'table') ? 'none' : 'table';
+    }
+    
+    // Toggle function for accordion items
+    function toggleAccordion(element) {
+      const content = element.nextElementSibling;
+      content.style.display = (content.style.display === 'block') ? 'none' : 'block';
+    }
+    
+    // Toggle function for detailed reports section
+    function toggleAccordionSection() {
+      const section = document.getElementById('detailedReports');
+      section.style.display = (section.style.display === 'block') ? 'none' : 'block';
+    }
+    
+    // Toggle function for expanding/collapsing the progress chart
+    function toggleExpandProgressChart() {
+      const container = document.getElementById('progressChartContainer');
+      container.classList.toggle('expanded');
+      progressChart.update();
+      const btn = container.querySelector('.expand-btn');
+      btn.innerText = container.classList.contains('expanded') ? 'Collapse Progress Chart' : 'Expand Progress Chart';
+    }
+    
+    // Fetch aggregated report data from the backend
+    fetch('/api/reportdata?nocache=' + new Date().getTime())
+      .then(response => response.json())
+      .then(data => {
+        // Update Volume Chart with check-out volumes from backend
+        volumeChart.data.datasets[1].data = data.checkOutVolumes;
+        volumeChart.update();
+        
+        // Update missed check-out table
+        document.getElementById('missedCount').innerText = data.missedCheckoutUsers.length;
+        const tbody = document.getElementById('missedTableBody');
+        tbody.innerHTML = "";
+        data.missedCheckoutUsers.forEach(user => {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.innerText = user.username;
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        });
+        
+        // Update Progress Chart with actual progress data
+        progressChart.data.labels = data.progress.map(item => item.username);
+        progressChart.data.datasets[0].data = data.progress.map(item => item.progress);
+        // Dynamically adjust canvas height based on number of users (e.g., 30px per user)
+        const numUsers = data.progress.length;
+        const newHeight = numUsers * 30;
+        document.getElementById('progressChart').height = newHeight;
+        progressChart.update();
+        
+        // Build the detailed reports accordion (for check-out details)
+        const accordionDiv = document.querySelector('#detailedReports .accordion');
+        accordionDiv.innerHTML = "";
+        data.detailedReports.forEach(report => {
+          if(report.checkOut) { // Only include users with check-out details
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'accordion-item';
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'accordion-header';
+            headerDiv.innerText = 'User: ' + report.username;
+            headerDiv.onclick = () => toggleAccordion(headerDiv);
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'accordion-content';
+            contentDiv.innerHTML = `
+              <h3>Check Out Details</h3>
+              <ul>
+                <li><strong>Question:</strong> ${report.checkOut.question}</li>
+                <li><strong>Answer:</strong> ${report.checkOut.answer}</li>
+                <li><strong>Time:</strong> ${report.checkOut.time}</li>
+              </ul>
+            `;
+            itemDiv.appendChild(headerDiv);
+            itemDiv.appendChild(contentDiv);
+            accordionDiv.appendChild(itemDiv);
+          }
+        });
+      })
+      .catch(error => console.error('Error fetching report data:', error));
+  </script>
+</body>
+</html>
