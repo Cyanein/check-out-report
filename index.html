@@ -114,12 +114,12 @@
       options: { responsive: true, maintainAspectRatio: false }
     });
 
-    // Initialize Progress Chart
+    // Initialize Progress Chart as a horizontal bar chart
     const progressCtx = document.getElementById('progressChart').getContext('2d');
     const progressChart = new Chart(progressCtx, {
-      type: 'Bar',
+      type: 'bar', // Using 'bar' with indexAxis set to 'y' for horizontal bars
       data: {
-        labels: [], // Usernames (updated dynamically)
+        labels: [], // Updated dynamically
         datasets: [{
           label: 'Check‑Out Progress %',
           data: [], // Updated dynamically
@@ -136,6 +136,7 @@
       }
     });
 
+    // Toggle functions for table and accordion
     function toggleTable(id) {
       const table = document.getElementById(id);
       table.style.display = (table.style.display === 'table') ? 'none' : 'table';
@@ -157,22 +158,22 @@
       progressChart.update();
     }
     
-    // Fetch check-out report data
+    // Fetch check-out report data and update UI
     fetch('http://localhost:3978/api/checkout_report?nocache=' + new Date().getTime())
       .then(response => response.json())
       .then(data => {
-        console.log("Check-Out API Response:", data); // Debugging
-
+        console.log("Check-Out API Response:", data); // Debug output
+        
         if (!data || Object.keys(data).length === 0) {
           console.error("Check-out data is empty");
           return;
         }
 
-        // Update Volume Chart
-        volumeChart.data.datasets[0].data = [data.checkOutVolumes[0]];
+        // Update Volume Chart with the full array of unique check-out counts
+        volumeChart.data.datasets[0].data = data.checkOutVolumes;
         volumeChart.update();
 
-        // Update Missed Check-Out Users
+        // Update Missed Check-Out Users count
         document.getElementById('missedCount').innerText = data.missedCheckoutUsers.length;
         const tbody = document.getElementById('missedTableBody');
         tbody.innerHTML = "";
@@ -180,7 +181,7 @@
           tbody.innerHTML += `<tr><td>${user.username}</td></tr>`;
         });
 
-        // Update Progress Chart
+        // Update Progress Chart with horizontal bars
         progressChart.data.labels = data.progress.map(user => user.username);
         progressChart.data.datasets[0].data = data.progress.map(user => user.progress);
         progressChart.update();
@@ -189,7 +190,7 @@
         const accordionDiv = document.querySelector('#detailedReports .accordion');
         accordionDiv.innerHTML = "";
         data.detailedReports.forEach(report => {
-          if (report.checkOut.length > 0) {
+          if (report.checkOut && report.checkOut.length > 0) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'accordion-item';
             itemDiv.innerHTML = `<div class="accordion-header">${report.username}</div>`;
@@ -205,7 +206,10 @@
           }
         });
       })
-      .catch(error => console.error('Error fetching report data:', error));
+      .catch(error => {
+        console.error('Error fetching check-out data:', error);
+        document.getElementById('missedCount').innerText = "Error";
+      });
   </script>
 </body>
 </html>
