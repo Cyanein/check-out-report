@@ -193,7 +193,12 @@
           if (report.checkOut && report.checkOut.length > 0) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'accordion-item';
-            itemDiv.innerHTML = `<div class="accordion-header">${report.username}</div>`;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'accordion-header';
+            headerDiv.innerText = report.username;
+            headerDiv.onclick = () => toggleAccordion(headerDiv);
+
             const contentDiv = document.createElement('div');
             contentDiv.className = 'accordion-content';
             contentDiv.innerHTML = report.checkOut.map(entry => `
@@ -201,6 +206,8 @@
               <strong>Answer:</strong> ${entry.answer}<br>
               <strong>Time:</strong> ${entry.time}</p>
             `).join('');
+
+            itemDiv.appendChild(headerDiv);
             itemDiv.appendChild(contentDiv);
             accordionDiv.appendChild(itemDiv);
           }
