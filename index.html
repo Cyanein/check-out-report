@@ -196,22 +196,27 @@
           const accordionDiv = document.querySelector('#detailedReports .accordion');
           accordionDiv.innerHTML = "";
           data.detailedReports.forEach(report => {
-            if (report.checkOut && report.checkOut.length > 0) {
+            if (report.checkOut.length > 0) {
               const itemDiv = document.createElement('div');
               itemDiv.className = 'accordion-item';
-
               const headerDiv = document.createElement('div');
               headerDiv.className = 'accordion-header';
-              headerDiv.innerText = report.username;
+              headerDiv.innerText = `User: ${report.username}`;
               headerDiv.onclick = () => toggleAccordion(headerDiv);
 
               const contentDiv = document.createElement('div');
               contentDiv.className = 'accordion-content';
-              contentDiv.innerHTML = report.checkOut.map(entry => `
-                <p><strong>Question:</strong> ${entry.question}<br>
-                <strong>Answer:</strong> ${entry.answer}<br>
-                <strong>Time:</strong> ${entry.time}</p>
-              `).join('');
+              let reportHTML = '<h3>Check‑Out Details</h3><ul>';
+              report.checkOut.forEach(entry => {
+                reportHTML += `
+                  <li><strong>Question:</strong> ${entry.question}</li>
+                  <li><strong>Answer:</strong> ${entry.answer}</li>
+                  <li><strong>Time:</strong> ${entry.time}</li>
+                  <hr>
+                `;
+              });
+              reportHTML += '</ul>';
+              contentDiv.innerHTML = reportHTML;
 
               itemDiv.appendChild(headerDiv);
               itemDiv.appendChild(contentDiv);
