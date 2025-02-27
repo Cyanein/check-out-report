@@ -176,6 +176,7 @@
         .then(response => response.json())
         .then(data => {
           // Update Volume Chart with the full array of unique check-out counts
+          volumeChart.data.labels = data.dayLabels;
           volumeChart.data.datasets[0].data = data.checkOutVolumes;
           volumeChart.update();
 
