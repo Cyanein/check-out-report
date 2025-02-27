@@ -18,23 +18,16 @@
     }
     .left-panel { width: 48%; text-align: left; }
     .right-panel { width: 48%; text-align: right; }
-    /* Flex container for both charts */
-    .charts-container {
-      display: flex; gap: 20px; justify-content: flex-end;
-    }
+    .charts-container { display: flex; gap: 20px; justify-content: flex-end; }
     /* Progress Chart Container */
     .progress-chart-container {
       position: relative; width: 550px; height: 300px; margin-left: -100px;
       transition: all 0.3s ease;
     }
     /* Expanded state for progress chart */
-    .progress-chart-container.expanded {
-      width: 800px; height: 600px; margin-left: 0;
-    }
+    .progress-chart-container.expanded { width: 800px; height: 600px; margin-left: 0; }
     /* Volume Chart Container */
-    .chart-container {
-      position: relative; width: 500px; height: 350px; margin-left: -10px;
-    }
+    .chart-container { position: relative; width: 500px; height: 350px; margin-left: -10px; }
     /* Buttons */
     .toggle-btn, .expand-btn {
       margin-top: 10px; padding: 10px 20px; background: #28a745; color: white;
@@ -61,7 +54,7 @@
     <!-- Left: Missed Check‑Out Summary -->
     <div class="left-panel">
       <h2>Missed Check‑Outs</h2>
-      <p>Total Missed: <span id="missedCount">2</span></p>
+      <p>Total Missed: <span id="missedCount">Loading...</span></p>
       <button class="toggle-btn" onclick="toggleTable('missedTable')">Show Details</button>
       <table class="details-table" id="missedTable">
         <thead>
@@ -75,7 +68,7 @@
     <!-- Right: Container for both charts -->
     <div class="right-panel">
       <div class="charts-container">
-        <!-- Progress Chart (with Expand button) -->
+        <!-- Progress Chart -->
         <div class="progress-chart-container" id="progressChartContainer">
           <canvas id="progressChart"></canvas>
           <button class="expand-btn" onclick="toggleExpandProgressChart()">Expand Progress Chart</button>
@@ -104,139 +97,99 @@
                           today.getFullYear();
     document.getElementById("date").innerText = formattedDate;
     
-    // Initialize Volume Chart with placeholder data
+    // Initialize Volume Chart
     const volumeCtx = document.getElementById('volumeChart').getContext('2d');
     const volumeChart = new Chart(volumeCtx, {
       type: 'bar',
       data: {
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
         datasets: [{
-          label: 'Check‑In Volume',
-          data: [10, 15, 12, 18, 20],
-          backgroundColor: 'rgba(54, 162, 235, 0.6)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1
-        },
-        {
           label: 'Check‑Out Volume',
-          data: [8, 12, 14, 11, 9],
+          data: [], // Updated dynamically
           backgroundColor: 'rgba(255, 99, 132, 0.6)',
           borderColor: 'rgba(255, 99, 132, 1)',
           borderWidth: 1
         }]
       },
-      options: {
-        indexAxis: 'x', responsive: true, maintainAspectRatio: false,
-        scales: { x: { beginAtZero: true, max: 100 } }
-      }
+      options: { responsive: true, maintainAspectRatio: false }
     });
-    
-    // Initialize Progress Chart with placeholder data
+
+    // Initialize Progress Chart
     const progressCtx = document.getElementById('progressChart').getContext('2d');
     const progressChart = new Chart(progressCtx, {
       type: 'bar',
       data: {
-        labels: ['user1', 'user2', 'user3'],
+        labels: [], // Usernames (updated dynamically)
         datasets: [{
-          label: 'Progress %',
-          data: [75, 85, 60],
-          backgroundColor: [
-            'rgba(75, 192, 192, 0.6)',
-            'rgba(153, 102, 255, 0.6)',
-            'rgba(255, 159, 64, 0.6)'
-          ],
-          borderColor: [
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)'
-          ],
+          label: 'Check‑Out Progress %',
+          data: [], // Updated dynamically
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgba(75, 192, 192, 1)',
           borderWidth: 1
         }]
       },
-      options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-        scales: { x: { beginAtZero: true, max: 100 } }
-      }
+      options: { responsive: true, maintainAspectRatio: false }
     });
-    
-    // Toggle function for missed users table
+
     function toggleTable(id) {
       const table = document.getElementById(id);
       table.style.display = (table.style.display === 'table') ? 'none' : 'table';
     }
     
-    // Toggle function for accordion items
     function toggleAccordion(element) {
       const content = element.nextElementSibling;
       content.style.display = (content.style.display === 'block') ? 'none' : 'block';
     }
     
-    // Toggle function for detailed reports section
     function toggleAccordionSection() {
       const section = document.getElementById('detailedReports');
       section.style.display = (section.style.display === 'block') ? 'none' : 'block';
     }
     
-    // Toggle function for expanding/collapsing the progress chart
     function toggleExpandProgressChart() {
       const container = document.getElementById('progressChartContainer');
       container.classList.toggle('expanded');
       progressChart.update();
-      const btn = container.querySelector('.expand-btn');
-      btn.innerText = container.classList.contains('expanded') ? 'Collapse Progress Chart' : 'Expand Progress Chart';
     }
     
-    // Fetch aggregated report data from the backend
+    // Fetch check-out report data
     fetch('http://localhost:3978/api/checkout_report?nocache=' + new Date().getTime())
       .then(response => response.json())
       .then(data => {
-        // Update Volume Chart with check-out volumes from backend
-        volumeChart.data.datasets[1].data = data.checkOutVolumes;
+        // Update Volume Chart
+        volumeChart.data.datasets[0].data = data.checkOutVolumes;
         volumeChart.update();
-        
-        // Update missed check-out table
+
+        // Update missed check-out users
         document.getElementById('missedCount').innerText = data.missedCheckoutUsers.length;
         const tbody = document.getElementById('missedTableBody');
         tbody.innerHTML = "";
         data.missedCheckoutUsers.forEach(user => {
           const tr = document.createElement('tr');
-          const td = document.createElement('td');
-          td.innerText = user.username;
-          tr.appendChild(td);
+          tr.innerHTML = `<td>${user.username}</td>`;
           tbody.appendChild(tr);
         });
-        
-        // Update Progress Chart with actual progress data
-        progressChart.data.labels = data.progress.map(item => item.username);
-        progressChart.data.datasets[0].data = data.progress.map(item => item.progress);
-        // Dynamically adjust canvas height based on number of users (e.g., 30px per user)
-        const numUsers = data.progress.length;
-        const newHeight = numUsers * 30;
-        document.getElementById('progressChart').height = newHeight;
+
+        // Update Progress Chart
+        progressChart.data.labels = data.progress.map(user => user.username);
+        progressChart.data.datasets[0].data = data.progress.map(user => user.progress);
         progressChart.update();
-        
-        // Build the detailed reports accordion (for check-out details)
+
+        // Build detailed reports accordion
         const accordionDiv = document.querySelector('#detailedReports .accordion');
         accordionDiv.innerHTML = "";
         data.detailedReports.forEach(report => {
-          if(report.checkOut) { // Only include users with check-out details
+          if (report.checkOut.length > 0) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'accordion-item';
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'accordion-header';
-            headerDiv.innerText = 'User: ' + report.username;
-            headerDiv.onclick = () => toggleAccordion(headerDiv);
+            itemDiv.innerHTML = `<div class="accordion-header">${report.username}</div>`;
             const contentDiv = document.createElement('div');
             contentDiv.className = 'accordion-content';
-            contentDiv.innerHTML = `
-              <h3>Check Out Details</h3>
-              <ul>
-                <li><strong>Question:</strong> ${report.checkOut.question}</li>
-                <li><strong>Answer:</strong> ${report.checkOut.answer}</li>
-                <li><strong>Time:</strong> ${report.checkOut.time}</li>
-              </ul>
-            `;
-            itemDiv.appendChild(headerDiv);
+            contentDiv.innerHTML = report.checkOut.map(entry => `
+              <p><strong>Question:</strong> ${entry.question}<br>
+              <strong>Answer:</strong> ${entry.answer}<br>
+              <strong>Time:</strong> ${entry.time}</p>
+            `).join('');
             itemDiv.appendChild(contentDiv);
             accordionDiv.appendChild(itemDiv);
           }
