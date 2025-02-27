@@ -156,18 +156,23 @@
     fetch('http://localhost:3978/api/checkout_report?nocache=' + new Date().getTime())
       .then(response => response.json())
       .then(data => {
+        console.log("Check-Out API Response:", data); // Debugging
+
+        if (!data || Object.keys(data).length === 0) {
+          console.error("Check-out data is empty");
+          return;
+        }
+
         // Update Volume Chart
-        volumeChart.data.datasets[0].data = data.checkOutVolumes;
+        volumeChart.data.datasets[0].data = [data.checkOutVolumes[0]];
         volumeChart.update();
 
-        // Update missed check-out users
+        // Update Missed Check-Out Users
         document.getElementById('missedCount').innerText = data.missedCheckoutUsers.length;
         const tbody = document.getElementById('missedTableBody');
         tbody.innerHTML = "";
         data.missedCheckoutUsers.forEach(user => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${user.username}</td>`;
-          tbody.appendChild(tr);
+          tbody.innerHTML += `<tr><td>${user.username}</td></tr>`;
         });
 
         // Update Progress Chart
