@@ -117,7 +117,7 @@
     // Initialize Progress Chart
     const progressCtx = document.getElementById('progressChart').getContext('2d');
     const progressChart = new Chart(progressCtx, {
-      type: 'horizontalBar',
+      type: 'Bar',
       data: {
         labels: [], // Usernames (updated dynamically)
         datasets: [{
@@ -128,7 +128,12 @@
           borderWidth: 1
         }]
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { x: { beginAtZero: true, max: 100 } }
+      }
     });
 
     function toggleTable(id) {
