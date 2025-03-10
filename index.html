@@ -166,7 +166,8 @@
     // Function to load report based on selected date
     function loadReport() {
       const reportDate = document.getElementById('reportDate').value;
-      fetch('http://localhost:3978/api/checkout_report?date=' + reportDate + '&nocache=' + new Date().getTime())
+      fetch('http://0.0.0.0:3978/api/checkout_report?date=' + reportDate + '&nocache=' + new Date().getTime())
+      // fetch('http://localhost:3978/api/checkout_report?date=' + reportDate + '&nocache=' + new Date().getTime())
         .then(response => response.json())
         .then(data => {
           // Update Volume Chart with check‑out volumes
