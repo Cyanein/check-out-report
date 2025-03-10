@@ -166,7 +166,7 @@
     // Function to load report based on selected date
     function loadReport() {
       const reportDate = document.getElementById('reportDate').value;
-      fetch('http://0.0.0.0:3978/api/checkout_report?date=' + reportDate + '&nocache=' + new Date().getTime())
+      fetch('https://47d9-222-255-200-153.ngrok-free.app/api/checkout_report?date=' + reportDate + '&nocache=' + new Date().getTime())
       // fetch('http://localhost:3978/api/checkout_report?date=' + reportDate + '&nocache=' + new Date().getTime())
         .then(response => response.json())
         .then(data => {
